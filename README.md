@@ -9,9 +9,9 @@
 
 | | |
 |---|---|
-| **Team name** | _e.g. Team Nova_ |
-| **Members** | _Name 1, Name 2, Name 3_ |
-| **City / Venue** | _Pune / Hyderabad / Bengaluru / Chennai_ |
+| **Team name** | BitMasters|
+| **Members** | Prajwal Bhosale, Madhur Biradar, Shivprasad Bhure|
+| **City / Venue** | Pune  |
 
 ---
 
