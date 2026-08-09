@@ -1,0 +1,310 @@
+# =============================================================================
+# ANDROID STUDIO – KOTLIN / JAVA PROJECT
+# Comprehensive .gitignore covering build outputs, IDE files, OS artifacts,
+# secrets, and all future auto-generated files.
+# =============================================================================
+
+
+# =============================================================================
+# BUILD OUTPUTS
+# =============================================================================
+build/
+**/build/
+out/
+**/out/
+
+# Generated APKs, AABs, and mapping files
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ProGuard / R8
+*.pro
+proguard/
+mapping.txt
+seeds.txt
+usage.txt
+
+# Compiled Java / Kotlin class files
+*.class
+
+# Generated resources
+gen/
+**/gen/
+
+# Lint outputs
+lint/
+lint-results*.xml
+lint-results*.html
+
+# Test results & reports
+test-results/
+**/test-results/
+reports/
+**/reports/
+surefire-reports/
+jacoco.exec
+*.exec
+coverage/
+
+
+# =============================================================================
+# GRADLE
+# =============================================================================
+.gradle/
+**/gradle/wrapper/gradle-wrapper.jar
+local.properties
+gradle.properties.local
+
+# Gradle caches & daemon logs
+.gradle/
+gradle-app.setting
+.gradletasknamecache
+
+# Generated Gradle scripts
+gradlew
+gradlew.bat
+
+
+# =============================================================================
+# ANDROID-SPECIFIC GENERATED FILES
+# =============================================================================
+
+# Generated R.java / BuildConfig.java / Manifest
+**/R.java
+**/BuildConfig.java
+**/Manifest.java
+
+# AIDL generated sources
+**/aidl_output/
+
+# Renderscript
+**/renderscript/
+
+# Navigation / Safe Args generated code
+**/generated/
+
+# Room / Hilt / Kapt / KSP generated sources
+**/kapt/
+**/ksp/
+**/generated-sources/
+**/generated-kotlin-sources/
+
+# DataBinding generated files
+**/databinding/
+**/BR.java
+
+# Android Test orchestrator
+**/orchestrator-output/
+
+# Android emulator snapshots
+*.avd/
+.android/
+.emulator_console_auth_token
+
+# ADB / DDMS
+ddms.cfg
+monitor.log
+
+# Profiler & Tracing
+*.trace
+*.hprof
+
+# Keystore (NEVER commit signing keys)
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+release.jks
+debug.keystore
+
+
+# =============================================================================
+# INTELLIJ IDEA / ANDROID STUDIO IDE FILES
+# =============================================================================
+.idea/
+!.idea/codeStyles/
+!.idea/inspectionProfiles/
+!.idea/runConfigurations/
+!.idea/codeStyleSettings.xml
+
+*.iml
+*.ipr
+*.iws
+*.idea
+
+# Android Studio caches
+.idea/caches/
+.idea/shelf/
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/tasks.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/modules.xml
+.idea/assetWizardSettings.xml
+.idea/deploymentTargetDropDown.xml
+.idea/androidTestResultsUserPreferences.xml
+.idea/migrations.xml
+.idea/navEditor.xml
+
+# Installed plugins
+.idea/jarRepositories.xml
+.idea/libraries/
+
+# Crashlytics plugin (for Android Studio and IntelliJ)
+com_crashlytics_export_strings.xml
+crashlytics-build.properties
+fabric.properties
+
+
+# =============================================================================
+# KOTLIN
+# =============================================================================
+*.kotlin_module
+.kotlin/
+
+# Kotlin incremental compilation data
+**/.kotlin/
+
+
+# =============================================================================
+# MAVEN (if used alongside Gradle)
+# =============================================================================
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+
+# =============================================================================
+# SECRETS & ENVIRONMENT FILES  ⚠️ NEVER COMMIT THESE
+# =============================================================================
+.env
+.env.*
+*.env
+local.properties
+secrets.properties
+secrets.xml
+google-services.json
+GoogleService-Info.plist
+*.p12
+*.pfx
+agconnect-services.json
+
+
+# =============================================================================
+# CI / CD ARTIFACTS
+# =============================================================================
+.ci/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+
+# =============================================================================
+# OS – WINDOWS
+# =============================================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+
+# =============================================================================
+# OS – macOS
+# =============================================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+
+# =============================================================================
+# OS – LINUX
+# =============================================================================
+*~
+.nfs*
+
+
+# =============================================================================
+# LOGS & TEMP FILES
+# =============================================================================
+*.log
+logs/
+*.tmp
+*.temp
+*.swp
+*.bak
+*.orig
+hs_err_pid*
+replay_pid*
+
+
+# =============================================================================
+# OTHER IDES / EDITORS (for collaborators)
+# =============================================================================
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+bin/
+tmp/
+
+# NetBeans
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+
+# Vim / Emacs
+*.un~
+Session.vim
+.netrwhist
+
+
+# =============================================================================
+# NODE / NPM (if React Native or hybrid tools are used)
+# =============================================================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+.yarn/
+
+
+# =============================================================================
+# FIREBASE / GOOGLE CLOUD
+# =============================================================================
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
