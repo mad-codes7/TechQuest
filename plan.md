@@ -28,29 +28,37 @@ understand it."
 
 ## STACK
 
-- **Language/UI:** Kotlin, Jetpack Compose (native Android — NOT Flutter, NOT XML views)
-- **Local storage:** DataStore / SharedPreferences only — no database, no backend, no auth
-- **OCR:** Google ML Kit Text Recognition v2 — on-device, offline, no API key
-- **AI:** single LLM provider (event-issued API key), called via Retrofit/OkHttp
-- **Video:** YouTube Data API v3 `search.list`, deep-link to YouTube app (no in-app player)
-- **Animation:** Compose `animateFloatAsState` / `AnimatedVisibility`; Lottie only if time allows
+- **Framework:** Flutter (Dart) — cross-platform, but this build targets Android only for the demo
+- **State management:** `provider` package — simple `ChangeNotifier`s, no Riverpod/Bloc overhead
+  for a 60-minute build
+- **Navigation:** Simple named routes via `MaterialApp.routes` — no `go_router`, no nested nav,
+  keep it flat
+- **Local storage:** `shared_preferences` only — no database, no backend, no auth
+- **OCR:** `google_mlkit_text_recognition` Flutter plugin — on-device, offline, no API key
+- **Image capture for OCR:** `image_picker` (camera or gallery)
+- **AI:** single LLM provider (event-issued API key), called via `http` or `dio`
+- **Video:** YouTube Data API v3 `search.list` via `http`; open results with `url_launcher`
+  (deep-link to YouTube app — no in-app player, no video plugin)
+- **Animation:** Flutter's built-in `AnimatedContainer` / `TweenAnimationBuilder` for progress
+  bar and celebration effects; `lottie` package only if time allows
 
 ---
 
 ## HARD RULES — never violate these regardless of what a task seems to ask for
 
 1. **No backend, no database, no login/auth, no cloud sync.** Local state only.
-2. **No in-app video player.** Deep-link out to YouTube, always.
+2. **No in-app video player.** Deep-link out to YouTube via `url_launcher`, always.
 3. **Every AI call must have a hardcoded fallback.** If the API call fails, times out, or returns
    unparseable JSON, fall back silently to pre-baked content. Never show a raw error to the user.
 4. **Build the fallback path before wiring the live API call**, for every feature. The app must
    be demoable on hardcoded content alone at any point in the build.
 5. **The agent decides the next action — the user never manually picks "next."** Any UI change
    that adds a manual "next step" button defeats the core differentiator. Don't add one.
-6. **Gamification is a presentation layer over `GameState.kt`, fully decoupled from
-   `AgentEngine.kt` and the mastery map.** Never let game-state logic leak into agent decision
+6. **Gamification (`GameState`) is a presentation-layer `ChangeNotifier`, fully decoupled from
+   `AgentEngine` and the mastery map.** Never let game-state logic leak into agent decision
    logic, and never let it block the core loop from working.
-7. **One accent color + neutrals.** Do not introduce a second competing brand color.
+7. **One accent color + neutrals.** Do not introduce a second competing brand color — set once in
+   `ThemeData` and reuse everywhere.
 8. If a feature isn't in the MUST/SHOULD list below, don't build it without updating this file first.
 
 ---
@@ -59,11 +67,11 @@ understand it."
 
 ### MUST HAVE (build first, in order)
 1. Topic input (`TextField`) with language toggle
-2. OCR ingestion (ML Kit) → populates topic field, user can edit before submit
+2. OCR ingestion (`google_mlkit_text_recognition` + `image_picker`) → populates topic field, user can edit before submit
 3. Ladder generation → `{eli5, teen, expert}` via `LADDER_PROMPT`
 4. Free-text quiz → graded via `GRADE_PROMPT`, returns `{correct, misconception}`
 5. `AgentEngine` loop (see ARCHITECTURE below) driving what happens after every quiz answer
-6. Local persistence of the mastery map
+6. Local persistence of the mastery map (`shared_preferences`)
 
 ### SHOULD HAVE (only after MUST HAVE works end-to-end)
 7. "Why should I care" hook line before the ladder (`HOOK_PROMPT`)
@@ -76,9 +84,9 @@ understand it."
 14. Progress bar across session stages (Hook → Ladder → Quiz → Mastery)
 
 ### NICE TO HAVE (only if everything above is done with time left)
-15. TTS narration of the ladder
-16. Save/share session as text card
-17. Celebration animation on mastery (confetti/checkmark)
+15. TTS narration of the ladder (`flutter_tts`)
+16. Save/share session as text card (`share_plus`)
+17. Celebration animation on mastery (confetti/checkmark — `lottie` or a cheap `ScaleTransition`)
 18. Topic path/map screen (Duolingo-style node trail)
 
 ### NEVER BUILD
@@ -89,42 +97,43 @@ Login/accounts · cloud backend/database · in-app video player · social/multip
 ## ARCHITECTURE
 
 ```
-app/
- ├─ ui/
- │   ├─ IngestScreen.kt       // topic text input + OCR button + language toggle + streak badge
- │   ├─ HookScreen.kt         // "why this matters" line + progress bar starts
- │   ├─ LadderScreen.kt       // rung explanation, "still confused?" button, progress bar fills
- │   ├─ QuizScreen.kt         // free-text answer, hearts, +XP toast, feedback state
- │   └─ SessionEndScreen.kt   // mastery recap, celebration, XP/streak update, video cards, next-topic chips
+lib/
+ ├─ main.dart                 // MaterialApp, named routes, ThemeData (one accent color)
+ ├─ screens/
+ │   ├─ ingest_screen.dart       // topic text input + OCR button + language toggle + streak badge
+ │   ├─ hook_screen.dart         // "why this matters" line + progress bar starts
+ │   ├─ ladder_screen.dart       // rung explanation, "still confused?" button, progress bar fills
+ │   ├─ quiz_screen.dart         // free-text answer, hearts, +XP toast, feedback state
+ │   └─ session_end_screen.dart  // mastery recap, celebration, XP/streak update, video cards, next-topic chips
  ├─ agent/
- │   ├─ AgentEngine.kt        // core loop: mastery map + last result → next action
- │   ├─ ActionExecutor.kt     // maps action → screen navigation / API call
- │   └─ MasteryMap.kt         // Map<concept, "untested"|"shaky"|"solid">
+ │   ├─ agent_engine.dart        // core loop: mastery map + last result → next action
+ │   ├─ action_executor.dart     // maps action → screen navigation / API call
+ │   └─ mastery_map.dart         // Map<String, MasteryLevel> (untested/shaky/solid)
  ├─ game/
- │   └─ GameState.kt          // XP, streak, hearts — fully decoupled from agent/mastery logic
+ │   └─ game_state.dart          // ChangeNotifier: XP, streak, hearts — decoupled from agent/mastery logic
  ├─ network/
- │   ├─ ApiClient.kt          // Retrofit/OkHttp, single LLM endpoint
- │   ├─ PromptBuilder.kt      // builds JSON-structured prompts per type
- │   ├─ YoutubeClient.kt      // search.list wrapper
- │   └─ FallbackData.kt       // hardcoded topics/ladders/quizzes/videos
+ │   ├─ api_client.dart          // http/dio wrapper, single LLM endpoint
+ │   ├─ prompt_builder.dart      // builds JSON-structured prompts per type
+ │   ├─ youtube_client.dart      // search.list wrapper
+ │   └─ fallback_data.dart       // hardcoded topics/ladders/quizzes/videos
  └─ data/
-     └─ LocalStore.kt         // DataStore wrapper, no backend
+     └─ local_store.dart         // shared_preferences wrapper, no backend
 ```
 
 ### Agent action set
 ```
-ACTIONS = {
-  TEACH(concept, rung)
-  ANALOGIZE(concept, hobby)
-  QUIZ(concept)
-  ADVANCE(next_concept)
-  SUGGEST_VIDEOS(topic)
-  SUGGEST_NEXT_TOPICS(topic)
-  STOP(summary)
+enum AgentAction {
+  teach,            // (concept, rung) — re-explain at a specific level
+  analogize,        // (concept, hobby) — personalized analogy escalation
+  quiz,              // (concept) — test this concept again
+  advance,           // (nextConcept) — move on, this one's solid
+  suggestVideos,     // (topic) — fires once mastery reached
+  suggestNextTopics, // (topic) — the "curiosity trail"
+  stop               // (summary) — session goal met, wrap up
 }
 ```
 Loop: after every quiz answer → call `AGENT_DECIDE_PROMPT` with mastery map + last Q&A → get
-`{action, concept, reason}` → `ActionExecutor` runs it → repeat until `STOP`. Surface `reason` in
+`{action, concept, reason}` → `ActionExecutor` runs it → repeat until `stop`. Surface `reason` in
 UI as a small "why" chip — this is the visible proof of agentic behavior for judges.
 
 ### Prompt templates (strict JSON output only, always)
@@ -139,8 +148,9 @@ UI as a small "why" chip — this is the visible proof of agentic behavior for j
 | `NEXT_TOPICS_PROMPT` | topic | `{topics: [string, string, string]}` |
 
 ### OCR flow
-`IngestScreen` "Scan notes" button → camera/gallery intent → `InputImage.fromBitmap` →
-`TextRecognizer.process()` → populate (editable) topic field. Fully offline, no key needed.
+`IngestScreen` "Scan notes" button → `image_picker` (camera or gallery) → pass the resulting file
+to `google_mlkit_text_recognition`'s `TextRecognizer.processImage()` → populate (editable) topic
+field. Fully offline, no key needed.
 
 ### Fallback dataset
 5 pre-baked topics (quantum computing, photosynthesis, supply and demand, how vaccines work, why
@@ -154,27 +164,48 @@ content in the UI.
 
 | Element | Spec |
 |---|---|
-| XP | +10 per correct quiz answer, +5 per rung cleared, shown as toast/pop |
-| Streak | Persisted daily-use counter, top bar, flame-style icon |
+| XP | +10 per correct quiz answer, +5 per rung cleared, shown as `SnackBar`/toast |
+| Streak | Persisted daily-use counter (`shared_preferences`), top bar, flame-style icon |
 | Hearts | 3 per quiz session, -1 per wrong answer |
-| Progress bar | `LinearProgressIndicator` + `animateFloatAsState`, fills across Hook→Ladder→Quiz→Mastery |
-| Celebration | On `STOP`/mastery — Lottie confetti if time allows, else scale-spring checkmark |
+| Progress bar | `TweenAnimationBuilder`-driven `LinearProgressIndicator`, fills across Hook→Ladder→Quiz→Mastery |
+| Celebration | On `stop`/mastery — `lottie` confetti if time allows, else `ScaleTransition` checkmark |
 | Microcopy | Playful, never clinical — "Nice! You've got this." not "Correct." |
-| Color | One bold accent + neutrals in Material 3 `ColorScheme`, no second competing color |
+| Color | One bold accent + neutrals in `ThemeData.colorScheme`, no second competing color |
 
-`GameState.kt` holds all of this as its own local state, updated by `ActionExecutor` as a
-side-effect of agent actions — it does not feed back into agent decisions.
+`GameState` (a `ChangeNotifier` provided via `provider`) holds all of this as its own state,
+updated by `ActionExecutor` as a side-effect of agent actions — it does not feed back into agent
+decisions.
+
+---
+
+## KEY PACKAGES (pubspec.yaml)
+
+```yaml
+dependencies:
+  flutter:
+    sdk: flutter
+  provider: ^6.1.2
+  http: ^1.2.2
+  shared_preferences: ^2.3.2
+  google_mlkit_text_recognition: ^0.13.1
+  image_picker: ^1.1.2
+  url_launcher: ^6.3.1
+  # optional, only if time allows:
+  lottie: ^3.1.3
+  flutter_tts: ^4.1.0
+  share_plus: ^10.0.2
+```
 
 ---
 
 ## TEAM
 
-- **Person 1 (Android/Product):** screens, navigation, OCR, APK build, device install/testing
+- **Person 1 (Flutter UI):** screens, navigation, OCR wiring, APK build, device install/testing
 - **Person 2 (AI/Logic):** prompt templates, `AgentEngine`, `ApiClient`, `FallbackData`
 - **Person 3 (UX/Demo):** `GameState`, YouTube integration, polish/empty/loading states, README, demo rehearsal
 
 Git: feature branches per module, merge to `main` after each working chunk. Don't touch
-`AgentEngine.kt` and a screen file in the same window without a merge check.
+`agent_engine.dart` and a screen file in the same window without a merge check.
 
 ---
 
@@ -182,16 +213,16 @@ Git: feature branches per module, merge to `main` after each working chunk. Don'
 
 | Time | Task | Owner |
 |---|---|---|
-| 0–5 | Repo init, empty Compose activity, confirm APK builds + installs on iQOO immediately | P1 |
-| 5–15 | `IngestScreen` incl. OCR button (offline, no API dependency) | P1 |
-| 15–20 | `FallbackData.kt` written — unblocks everyone else | P2 |
-| 20–30 | `LadderScreen` + `LADDER_PROMPT` live, fallback tested | P2 |
-| 30–38 | `QuizScreen` + `GRADE_PROMPT` | P2 |
-| 38–48 | `AgentEngine` loop + `AGENT_DECIDE_PROMPT`, action execution wired | P1+P2 |
-| 40–48 | `SessionEndScreen` + YouTube card layout (parallel) | P3 |
-| 48–52 | YouTube API + deep-link + fallback video IDs | P3 |
-| 48–52 | `GameState.kt` — XP/streak/hearts, progress bar, streak badge (parallel) | P3 |
-| 52–56 | Full APK build, install on iQOO, full run-through, no-internet test | All |
+| 0–5 | `flutter create`, confirm it builds + runs on iQOO device immediately | P1 |
+| 5–15 | `ingest_screen.dart` incl. OCR button (offline, no API dependency) | P1 |
+| 15–20 | `fallback_data.dart` written — unblocks everyone else | P2 |
+| 20–30 | `ladder_screen.dart` + `LADDER_PROMPT` live, fallback tested | P2 |
+| 30–38 | `quiz_screen.dart` + `GRADE_PROMPT` | P2 |
+| 38–48 | `agent_engine.dart` loop + `AGENT_DECIDE_PROMPT`, action execution wired | P1+P2 |
+| 40–48 | `session_end_screen.dart` + YouTube card layout (parallel) | P3 |
+| 48–52 | YouTube API + `url_launcher` deep-link + fallback video IDs | P3 |
+| 48–52 | `game_state.dart` — XP/streak/hearts, progress bar, streak badge (parallel) | P3 |
+| 52–56 | Full APK build (`flutter build apk`), install on iQOO, full run-through, no-internet test | All |
 | 56–60 | Demo rehearsal (30s/60s/90s), confirm fallback works live | All |
 
 **If time runs short, cut in this order:** topic path map → celebration animation → TTS →
@@ -220,15 +251,15 @@ before final commit.
 
 ## STATUS — update this section as you build. This is what the agent should check first.
 
-- [ ] Repo initialized, APK builds and installs on iQOO
+- [ ] `flutter create` done, APK builds and installs on iQOO
 - [ ] IngestScreen (text input)
 - [ ] OCR ingestion working offline
-- [ ] FallbackData.kt written (5 topics)
+- [ ] fallback_data.dart written (5 topics)
 - [ ] LadderScreen + live LADDER_PROMPT wired
 - [ ] QuizScreen + GRADE_PROMPT wired
 - [ ] AgentEngine loop working end-to-end
 - [ ] SessionEndScreen + YouTube suggestions
-- [ ] GameState.kt — XP/streak/hearts working
+- [ ] GameState — XP/streak/hearts working
 - [ ] Progress bar animating across stages
 - [ ] Celebration animation (if time allows)
 - [ ] Full device run-through, no-internet test passed
